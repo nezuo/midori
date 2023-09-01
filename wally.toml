@@ -1,0 +1,9 @@
+[package]
+name = "nezuo/midori"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+exclude = ["**"]
+include = ["src", "src/*", "default.project.json", "wally.toml", "LICENSE"]
+realm = "shared"
+
+[dependencies]
