@@ -1,4 +1,19 @@
-local function shouldThrow(callback: () -> (), substring: string)
+--[=[
+	Throws if the callback doesn't error or if the error does not contain `substring`.
+
+	```lua
+	-- This will not throw because the callback errors with a string containing "needle"
+	shouldThrow(function()
+		error("haystick with a needle")
+	end, "needle")
+	```
+
+	@within x
+
+	@param callback () -> ()
+	@param substring string?
+]=]
+local function shouldThrow(callback: () -> (), substring: string?)
 	local ok, err = pcall(callback)
 
 	err = tostring(err)

@@ -29,7 +29,7 @@ function ConcurrentTests:wait()
 	end
 end
 
-local function runNode(node, results, concurrentTests, options)
+local function runNode(node, results, concurrentTests, config)
 	local tests = {}
 
 	local function runTest(test)
@@ -46,16 +46,18 @@ local function runNode(node, results, concurrentTests, options)
 		end
 
 		local timeoutThread = nil
-		if options.showTimeoutWarning then
-			timeoutThread = task.delay(options.timeoutWarningDelay, function()
+		if config.showTimeoutWarning then
+			timeoutThread = task.delay(config.timeoutWarningDelay, function()
 				warn(`Test '{test.name}' in '{node.modulePath}' exceeded timeout`)
 			end)
 		end
 
 		local startedAt = os.clock()
 
-		local ok, message = xpcall(test.callback, function(messagePrefix)
-			return debug.traceback(tostring(messagePrefix))
+		local ok, message = xpcall(function()
+			test.callback(context)
+		end, function(messagePrefix)
+			return debug.traceback(tostring(messagePrefix), 2)
 		end)
 
 		local duration = os.clock() - startedAt
@@ -64,7 +66,7 @@ local function runNode(node, results, concurrentTests, options)
 			task.cancel(timeoutThread)
 		end
 
-		if options.concurrent then
+		if config.concurrent then
 			results.duration = math.max(results.duration, duration)
 		else
 			results.duration += duration
@@ -91,7 +93,7 @@ local function runNode(node, results, concurrentTests, options)
 	end
 
 	for _, test in node.tests do
-		if options.concurrent then
+		if config.concurrent then
 			concurrentTests:execute(function()
 				runTest(test)
 			end)
@@ -102,7 +104,7 @@ local function runNode(node, results, concurrentTests, options)
 
 	local children = {}
 	for _, childNode in node.children do
-		table.insert(children, runNode(childNode, results, concurrentTests, options))
+		table.insert(children, runNode(childNode, results, concurrentTests, config))
 	end
 
 	return {
@@ -113,7 +115,7 @@ local function runNode(node, results, concurrentTests, options)
 	}
 end
 
-local function run(plan, options)
+local function run(plan, config)
 	local results = {
 		errors = {},
 		successCount = 0,
@@ -124,7 +126,7 @@ local function run(plan, options)
 
 	local concurrentTests = ConcurrentTests.new()
 
-	results.node = runNode(plan.node, results, concurrentTests, options)
+	results.node = runNode(plan.node, results, concurrentTests, config)
 
 	concurrentTests:wait()
 
