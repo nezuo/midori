@@ -4,4 +4,6 @@
 *.rbxlx
 *.rbxl
 
+/build
+
 /sourcemap.json
