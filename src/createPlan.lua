@@ -10,8 +10,10 @@ local function shouldThrow(callback: () -> (), substring: string)
 	end
 end
 
-local function createPlanNode(moduleTree)
+local function createPlanNode(moduleTree, parentBeforeEaches, parentAfterEaches)
 	local tests = {}
+	local beforeEaches = table.clone(parentBeforeEaches or {})
+	local afterEaches = table.clone(parentAfterEaches or {})
 
 	if moduleTree.callback ~= nil then
 		local function createTestCallback(options)
@@ -33,10 +35,20 @@ local function createPlanNode(moduleTree)
 			end
 		end
 
+		local function beforeEach(callback: ({}) -> ())
+			table.insert(beforeEaches, callback)
+		end
+
+		local function afterEach(callback: ({}) -> ())
+			table.insert(afterEaches, callback)
+		end
+
 		local x = {
 			test = createTestCallback({ focus = false, skip = false }),
 			testSKIP = createTestCallback({ focus = false, skip = true }),
 			testFOCUS = createTestCallback({ focus = true, skip = false }),
+			beforeEach = beforeEach,
+			afterEach = afterEach,
 			shouldThrow = shouldThrow,
 		}
 
@@ -46,7 +58,7 @@ local function createPlanNode(moduleTree)
 	local children = {}
 
 	for _, child in moduleTree.children do
-		table.insert(children, createPlanNode(child))
+		table.insert(children, createPlanNode(child, beforeEaches, afterEaches))
 	end
 
 	return {
@@ -55,6 +67,8 @@ local function createPlanNode(moduleTree)
 		isTestModule = moduleTree.callback ~= nil,
 		children = children,
 		tests = tests,
+		beforeEaches = beforeEaches,
+		afterEaches = afterEaches,
 	}
 end
 

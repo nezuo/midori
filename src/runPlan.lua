@@ -39,6 +39,12 @@ local function runNode(node, results, concurrentTests, options)
 			return
 		end
 
+		local context = {}
+
+		for _, beforeEach in node.beforeEaches do
+			beforeEach(context)
+		end
+
 		local timeoutThread = nil
 		if options.showTimeoutWarning then
 			timeoutThread = task.delay(options.timeoutWarningDelay, function()
@@ -78,6 +84,10 @@ local function runNode(node, results, concurrentTests, options)
 			message = message,
 			duration = duration,
 		})
+
+		for _, afterEach in node.afterEaches do
+			afterEach(context)
+		end
 	end
 
 	for _, test in node.tests do
