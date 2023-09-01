@@ -34,17 +34,19 @@ local function createModuleTree(instance)
 		local valueType = typeof(value)
 
 		if valueType ~= "function" then
-			error(`Expected test module '{module:GetFullName()}' to return a function, got a {valueType}`)
+			error(`expected test module '{module:GetFullName()}' to return a function, got a {valueType}`)
 		end
 
 		return {
 			name = removeTestSuffix(instance.Name),
+			modulePath = module:GetFullName(),
 			callback = value,
 			children = children,
 		}
 	elseif #children > 0 then
 		return {
 			name = instance.Name,
+			modulePath = instance:GetFullName(),
 			children = children,
 		}
 	else

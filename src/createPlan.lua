@@ -10,7 +10,7 @@ local function shouldThrow(callback: () -> (), substring: string)
 	end
 end
 
-local function createTestNode(moduleTree)
+local function createPlanNode(moduleTree)
 	local tests = {}
 
 	if moduleTree.callback ~= nil then
@@ -46,11 +46,12 @@ local function createTestNode(moduleTree)
 	local children = {}
 
 	for _, child in moduleTree.children do
-		table.insert(children, createTestNode(child))
+		table.insert(children, createPlanNode(child))
 	end
 
 	return {
 		name = moduleTree.name,
+		modulePath = moduleTree.modulePath,
 		isTestModule = moduleTree.callback ~= nil,
 		children = children,
 		tests = tests,
@@ -84,7 +85,7 @@ local function focusedTest(node)
 end
 
 local function createPlan(moduleTree)
-	local node = createTestNode(moduleTree)
+	local node = createPlanNode(moduleTree)
 
 	local hasFocusTest = focusedTest(node)
 

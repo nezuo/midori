@@ -3,18 +3,35 @@ local createPlan = require(script.createPlan)
 local reportResults = require(script.reportResults)
 local runPlan = require(script.runPlan)
 
--- should export utility asserts
--- should export shouldThrow
--- handle lifecycle somehow
--- filter tests somehow
--- potentially support running tests in parallel
+type Options = {
+	showTimeoutWarning: boolean?,
+	timeoutWarningDelay: number?,
+}
 
--- add a timeout for tests. I think this would have to cancel all the rest of the tests because of potential cleanup issues
--- or I can just warn in the console if a test is taking a long time!
+local DEFAULT_OPTIONS = {
+	showTimeoutWarning = true,
+	timeoutWarningDelay = 15,
+}
 
--- TODO: Every error should have the correct level
+local function merge(a, b)
+	local new = table.clone(a)
 
-local function runTests(root: Instance)
+	for key, value in b do
+		new[key] = value
+	end
+
+	return new
+end
+
+local function runTests(root: Instance, options: Options?)
+	options = merge(DEFAULT_OPTIONS, options or {})
+
+	for key in options do
+		if DEFAULT_OPTIONS[key] == nil then
+			error(`'{key}' is not an option`, 2)
+		end
+	end
+
 	local moduleTree = createModuleTree(root)
 
 	if moduleTree == nil then
@@ -34,7 +51,7 @@ local function runTests(root: Instance)
 		print(`Starting {plan.testCount} tests`)
 	end
 
-	local results = runPlan(plan)
+	local results = runPlan(plan, options)
 
 	reportResults(results)
 end
