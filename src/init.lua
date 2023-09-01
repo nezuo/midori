@@ -6,11 +6,13 @@ local runPlan = require(script.runPlan)
 type Options = {
 	showTimeoutWarning: boolean?,
 	timeoutWarningDelay: number?,
+	concurrent: boolean?,
 }
 
 local DEFAULT_OPTIONS = {
 	showTimeoutWarning = true,
 	timeoutWarningDelay = 15,
+	concurrent = false,
 }
 
 local function merge(a, b)

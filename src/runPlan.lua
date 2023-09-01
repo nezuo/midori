@@ -1,10 +1,42 @@
-local function runNode(node, results, options)
+local ConcurrentTests = {}
+ConcurrentTests.__index = ConcurrentTests
+
+function ConcurrentTests.new()
+	return setmetatable({
+		testCount = 0,
+	}, ConcurrentTests)
+end
+
+function ConcurrentTests:execute(callback)
+	task.spawn(function()
+		self.testCount += 1
+
+		callback()
+
+		self.testCount -= 1
+
+		if self.testCount == 0 then
+			task.spawn(self.waitThread)
+		end
+	end)
+end
+
+function ConcurrentTests:wait()
+	if self.testCount > 0 then
+		self.waitThread = coroutine.running()
+
+		coroutine.yield()
+	end
+end
+
+local function runNode(node, results, concurrentTests, options)
 	local tests = {}
-	for _, test in node.tests do
+
+	local function runTest(test)
 		if test.skip then
 			table.insert(tests, { name = test.name, skipped = true })
 
-			continue
+			return
 		end
 
 		local timeoutThread = nil
@@ -26,7 +58,11 @@ local function runNode(node, results, options)
 			task.cancel(timeoutThread)
 		end
 
-		results.duration += duration
+		if options.concurrent then
+			results.duration = math.max(results.duration, duration)
+		else
+			results.duration += duration
+		end
 
 		if not ok then
 			results.failureCount += 1
@@ -44,9 +80,19 @@ local function runNode(node, results, options)
 		})
 	end
 
+	for _, test in node.tests do
+		if options.concurrent then
+			concurrentTests:execute(function()
+				runTest(test)
+			end)
+		else
+			runTest(test)
+		end
+	end
+
 	local children = {}
 	for _, childNode in node.children do
-		table.insert(children, runNode(childNode, results, options))
+		table.insert(children, runNode(childNode, results, concurrentTests, options))
 	end
 
 	return {
@@ -66,7 +112,11 @@ local function run(plan, options)
 		duration = 0,
 	}
 
-	results.node = runNode(plan.node, results, options)
+	local concurrentTests = ConcurrentTests.new()
+
+	results.node = runNode(plan.node, results, concurrentTests, options)
+
+	concurrentTests:wait()
 
 	return results
 end
