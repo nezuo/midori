@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[560],{63891:s=>{s.exports=JSON.parse('{"sourceUrl":"https://github.com/nezuo/midori/blob/master","baseUrl":"/midori/","classOrder":[],"apiCategories":[]}')}}]);
