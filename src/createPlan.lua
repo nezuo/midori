@@ -10,66 +10,87 @@ local function shouldThrow(callback: () -> (), substring: string)
 	end
 end
 
-local function createPlanNode(moduleTree, parentBeforeEaches, parentAfterEaches)
-	local tests = {}
-	local beforeEaches = table.clone(parentBeforeEaches or {})
-	local afterEaches = table.clone(parentAfterEaches or {})
+local function assertType(name, value, expected)
+	if typeof(value) ~= expected then
+		error(`{name} must be a {expected}`, 3)
+	end
+end
 
-	if moduleTree.callback ~= nil then
-		local function createTestCallback(options)
-			return function(name: string, callback: () -> ())
-				if typeof(name) ~= "string" then
-					error("name must be a string", 2)
-				end
+local function createPlanNode(moduleNode)
+	local planNode = {
+		name = moduleNode.name,
+		modulePath = moduleNode.modulePath,
+		isTestModule = moduleNode.callback ~= nil,
+		children = {},
+		tests = {},
+		beforeEaches = {},
+		afterEaches = {},
+	}
 
-				if typeof(callback) ~= "function" then
-					error("callback must be a string", 2)
-				end
+	for _, child in moduleNode.children do
+		table.insert(planNode.children, createPlanNode(child))
+	end
 
-				table.insert(tests, {
-					name = name,
-					focus = options.focus,
-					skip = options.skip,
-					callback = callback,
-				})
-			end
+	if moduleNode.callback == nil then
+		return planNode
+	end
+
+	local nodeStack = { planNode }
+
+	local function createTestCallback(options)
+		return function(name: string, callback: () -> ())
+			assertType("name", name, "string")
+			assertType("callback", callback, "function")
+
+			table.insert(nodeStack[#nodeStack].tests, {
+				name = name,
+				focus = options.focus,
+				skip = options.skip,
+				callback = callback,
+			})
 		end
+	end
 
-		local function beforeEach(callback: ({}) -> ())
-			table.insert(beforeEaches, callback)
-		end
+	local function beforeEach(callback: ({}) -> ())
+		table.insert(nodeStack[#nodeStack].beforeEaches, callback)
+	end
 
-		local function afterEach(callback: ({}) -> ())
-			table.insert(afterEaches, callback)
-		end
+	local function afterEach(callback: ({}) -> ())
+		table.insert(nodeStack[#nodeStack].afterEaches, callback)
+	end
 
-		local x = {
-			test = createTestCallback({ focus = false, skip = false }),
-			testSKIP = createTestCallback({ focus = false, skip = true }),
-			testFOCUS = createTestCallback({ focus = true, skip = false }),
-			beforeEach = beforeEach,
-			afterEach = afterEach,
-			shouldThrow = shouldThrow,
+	local function nested(name: string, callback: () -> ())
+		assertType("name", name, "string")
+		assertType("callback", callback, "function")
+
+		local nestedNode = {
+			name = name,
+			modulePath = moduleNode.modulePath,
+			isTestModule = true,
+			children = {},
+			tests = {},
+			beforeEaches = {},
+			afterEaches = {},
 		}
 
-		moduleTree.callback(x)
+		table.insert(nodeStack[#nodeStack].children, nestedNode)
+
+		table.insert(nodeStack, nestedNode)
+		callback()
+		table.remove(nodeStack, #nodeStack)
 	end
 
-	local children = {}
+	moduleNode.callback({
+		test = createTestCallback({ focus = false, skip = false }),
+		testSKIP = createTestCallback({ focus = false, skip = true }),
+		testFOCUS = createTestCallback({ focus = true, skip = false }),
+		beforeEach = beforeEach,
+		afterEach = afterEach,
+		nested = nested,
+		shouldThrow = shouldThrow,
+	})
 
-	for _, child in moduleTree.children do
-		table.insert(children, createPlanNode(child, beforeEaches, afterEaches))
-	end
-
-	return {
-		name = moduleTree.name,
-		modulePath = moduleTree.modulePath,
-		isTestModule = moduleTree.callback ~= nil,
-		children = children,
-		tests = tests,
-		beforeEaches = beforeEaches,
-		afterEaches = afterEaches,
-	}
+	return planNode
 end
 
 local function visitTests(node, callback)
@@ -79,6 +100,25 @@ local function visitTests(node, callback)
 
 	for _, child in node.children do
 		visitTests(child, callback)
+	end
+end
+
+local function concatLists(a, b)
+	local new = table.clone(a)
+
+	for _, value in b do
+		table.insert(new, value)
+	end
+
+	return new
+end
+
+local function inheritLifecycleHooks(node, parentBeforeEaches, parentAfterEaches)
+	node.beforeEaches = concatLists(parentBeforeEaches, node.beforeEaches)
+	node.afterEaches = concatLists(parentAfterEaches, node.afterEaches)
+
+	for _, child in node.children do
+		inheritLifecycleHooks(child, node.beforeEaches, node.afterEaches)
 	end
 end
 
@@ -121,6 +161,8 @@ local function createPlan(moduleTree)
 			testCount += 1
 		end
 	end)
+
+	inheritLifecycleHooks(node, {}, {})
 
 	return {
 		node = node,
