@@ -74,7 +74,7 @@ local function reportErrors(results)
 
 		local messageBuffer = {}
 		for _, line in lines do
-			if not string.find(line, "TEST") then
+			if string.find(line, "midori") == nil and string.find(line, "Midori") == nil then
 				table.insert(messageBuffer, line)
 			end
 		end
