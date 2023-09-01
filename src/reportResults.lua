@@ -33,10 +33,6 @@ local function reportNode(node, buffer, level)
 		table.insert(buffer, `{string.rep(INDENT, level)}📁 {node.name}`)
 	end
 
-	for _, child in node.children do
-		reportNode(child, buffer, level + 1)
-	end
-
 	for _, test in node.tests do
 		local indent = string.rep(INDENT, level + 1)
 
@@ -48,6 +44,10 @@ local function reportNode(node, buffer, level)
 				`{indent}{if test.success then "✅" else "❌"} {test.name} ({formatDuration(test.duration)})`
 			)
 		end
+	end
+
+	for _, child in node.children do
+		reportNode(child, buffer, level + 1)
 	end
 end
 
