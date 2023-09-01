@@ -1,14 +1,5 @@
-local function shouldThrow(callback: () -> (), substring: string)
-	local ok, err = pcall(callback)
-
-	err = tostring(err)
-
-	if ok then
-		error("expected callback to throw, but it didn't throw", 2)
-	elseif substring ~= nil and string.find(err, substring, 1, true) == nil then
-		error(`expected callback to throw an error containing {substring}, but it threw: {err}`)
-	end
-end
+local merge = require(script.Parent.merge)
+local x = require(script.Parent.x)
 
 local function assertType(name, value, expected)
 	if typeof(value) ~= expected then
@@ -80,15 +71,14 @@ local function createPlanNode(moduleNode)
 		table.remove(nodeStack, #nodeStack)
 	end
 
-	moduleNode.callback({
+	moduleNode.callback(merge(x, {
 		test = createTestCallback({ focus = false, skip = false }),
 		testSKIP = createTestCallback({ focus = false, skip = true }),
 		testFOCUS = createTestCallback({ focus = true, skip = false }),
 		beforeEach = beforeEach,
 		afterEach = afterEach,
 		nested = nested,
-		shouldThrow = shouldThrow,
-	})
+	}))
 
 	return planNode
 end

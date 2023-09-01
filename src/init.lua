@@ -1,5 +1,6 @@
 local createModuleTree = require(script.createModuleTree)
 local createPlan = require(script.createPlan)
+local merge = require(script.merge)
 local reportResults = require(script.reportResults)
 local runPlan = require(script.runPlan)
 
@@ -14,16 +15,6 @@ local DEFAULT_OPTIONS = {
 	timeoutWarningDelay = 15,
 	concurrent = false,
 }
-
-local function merge(a, b)
-	local new = table.clone(a)
-
-	for key, value in b do
-		new[key] = value
-	end
-
-	return new
-end
 
 local function runTests(root: Instance, options: Options?)
 	options = merge(DEFAULT_OPTIONS, options or {})
