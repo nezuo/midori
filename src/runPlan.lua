@@ -4,6 +4,7 @@ ConcurrentTests.__index = ConcurrentTests
 function ConcurrentTests.new()
 	return setmetatable({
 		testCount = 0,
+		calledAllTests = false,
 	}, ConcurrentTests)
 end
 
@@ -15,7 +16,7 @@ function ConcurrentTests:execute(callback)
 
 		self.testCount -= 1
 
-		if self.testCount == 0 then
+		if self.calledAllTests and self.testCount == 0 then
 			task.spawn(self.waitThread)
 		end
 	end)
@@ -128,6 +129,7 @@ local function run(plan, config)
 
 	results.node = runNode(plan.node, results, concurrentTests, config)
 
+	concurrentTests.calledAllTests = true
 	concurrentTests:wait()
 
 	return results
