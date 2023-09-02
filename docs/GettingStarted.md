@@ -1,7 +1,8 @@
 # Getting Started
 
 ### Creating Tests
-First, create a module with a `.test` suffix. This module will return a function that when called will create your tests.
+
+First, to create a test module, create a new `ModuleScript` with a `.test` suffix. Test modules are required to return function and a table called `x` will be passed in. [`x`](/api/x) contains utility asserts like [`shouldThrow`](/api/x/shouldThrow), functions to register tests, and more.
 
 A simple test module might look like this:
 
@@ -25,7 +26,7 @@ Midori.runTests(ReplicatedStorage.YourLibrary)
 ```
 
 ### Debugging Tests
-To isolate certain tests, Midori provides a `testFOCUS` and a `testSKIP` function.
+To isolate certain tests, [`x`](/api/x) provides a `testFOCUS` and a `testSKIP` function.
 
 ```lua
 return function(x)

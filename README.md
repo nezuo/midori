@@ -1,4 +1,4 @@
 # Midori
 A testing library for Roblox.
 
-![alt text](https://github.com/nezuo/midori/blob/main/assets/example-output.png)
+![Example Midori Output](https://github.com/nezuo/midori/blob/main/static/example-output.png)
