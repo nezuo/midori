@@ -2,7 +2,7 @@
 
 ### Creating Tests
 
-First, to create a test module, create a new `ModuleScript` with a `.test` suffix. Test modules are required to return function and a table called `x` will be passed in. [`x`](/api/x) contains utility asserts like [`shouldThrow`](/api/x/shouldThrow), functions to register tests, and more.
+First, to create a test module, create a new `ModuleScript` with a `.test` suffix. Test modules are required to return function and a table called `x` will be passed in. [`x`](/api/x) contains utility asserts like [`shouldThrow`](/api/x#shouldThrow), functions to register tests, and more.
 
 A simple test module might look like this:
 
