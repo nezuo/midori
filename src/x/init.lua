@@ -1,3 +1,4 @@
+local assertEqual = require(script.assertEqual)
 local shouldThrow = require(script.shouldThrow)
 
 --[=[
@@ -109,5 +110,6 @@ local shouldThrow = require(script.shouldThrow)
 	@class x
 ]=]
 return {
+	assertEqual = assertEqual,
 	shouldThrow = shouldThrow,
 }

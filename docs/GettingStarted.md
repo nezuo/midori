@@ -9,8 +9,10 @@ A simple test module might look like this:
 `Module.test.lua`
 ```lua
 return function(x)
+    local assertEqual = x.assertEqual
+
     x.test("1 == 1", function()
-        assert(1 == 1)
+        assertEqual(1, 1)
     end)
 end
 ```
