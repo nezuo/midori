@@ -1,9 +1,9 @@
 --[=[
-    Throws if `left ~= right`.
+	Throws if `left ~= right`.
 
 	```lua
 	-- This will throw because 1 is not equal to 2.
-    assertEqual(1, 2)
+	assertEqual(1, 2)
 	```
 
 	@within x
